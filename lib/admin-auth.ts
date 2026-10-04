@@ -1,3 +1,5 @@
+"use server";
+
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -23,21 +25,18 @@ export async function hasAdminAccess() {
   }
 }
 
-export async function signInAdminAction(formData: FormData) {
+export async function signInAdminAction(
+  formData: FormData,
+): Promise<{ ok: boolean; error?: string }> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
-    throw new Error("Please enter your admin email and password.");
+    return { ok: false, error: "Please enter your admin email and password." };
   }
 
-  const fallbackMode = !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (fallbackMode) {
-    if (email !== DEMO_ADMIN_EMAIL || password !== DEMO_ADMIN_PASSWORD) {
-      throw new Error("Invalid admin credentials.");
-    }
-
+  // Allow demo credentials in local/demo mode
+  if (email === DEMO_ADMIN_EMAIL.toLowerCase() && password === DEMO_ADMIN_PASSWORD) {
     const cookieStore = await cookies();
     cookieStore.set(ADMIN_SESSION_COOKIE, "true", {
       httpOnly: true,
@@ -47,20 +46,32 @@ export async function signInAdminAction(formData: FormData) {
       maxAge: 60 * 60 * 8,
     });
 
-    redirect("/admin/dashboard");
+    return { ok: true };
   }
 
-  const supabase = await getSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  const supabaseConfigured =
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
-  if (error) {
-    throw new Error(error.message || "Invalid admin credentials.");
+  if (supabaseConfigured) {
+    try {
+      const supabase = await getSupabaseServerClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { ok: false, error: error.message || "Invalid admin credentials." };
+      }
+
+      return { ok: true };
+    } catch {
+      return { ok: false, error: "Authentication service unavailable." };
+    }
   }
 
-  redirect("/admin/dashboard");
+  return { ok: false, error: "Invalid admin credentials." };
 }
 
 export async function signOutAdminAction() {

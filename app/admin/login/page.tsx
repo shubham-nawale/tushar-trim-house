@@ -23,8 +23,15 @@ export default function AdminLoginPage() {
       const formData = new FormData();
       formData.set("email", email);
       formData.set("password", password);
-      await submitLoginAction(formData);
+      const result = await submitLoginAction(formData);
+
+      if (!result?.ok) {
+        setError(result?.error || "Invalid admin credentials.");
+        return;
+      }
+
       router.push("/admin/dashboard");
+      router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Invalid admin credentials.");
     } finally {
