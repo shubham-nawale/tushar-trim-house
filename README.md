@@ -1,4 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tushar Trim House
+
+A premium salon reservation web app built with Next.js, TypeScript, Tailwind CSS, and Supabase-ready patterns for live availability and booking flows.
+
+## Features
+
+- Premium dark salon landing page
+- Live chair availability and booking overview
+- Reservation flow with validation and mock booking logic
+- Admin login, dashboard, bookings, services, and settings pages
+- Supabase schema and RLS SQL for a real database setup
+
+## Local development
+
+1. Copy `.env.example` to `.env.local`
+2. Add your Supabase project values
+3. Run `npm install`
+4. Start the app with `npm run dev`
+
+## Production build
+
+```bash
+npm run build
+npm run start
+```
 
 ## Getting Started
 
